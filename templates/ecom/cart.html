@@ -1,0 +1,178 @@
+{% extends 'ecom/homebase.html' %}
+{% load static %}
+{% block content %}
+
+{% if redirect_to %}
+<script>
+  location.replace("{{redirect_to}}")
+</script>
+{% endif %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style media="screen">
+    .button {
+      display: inline-block;
+      border-radius: 4px;
+      background-color: #f4511e;
+      border: none;
+      color: #FFFFFF;
+      text-align: center;
+      font-size: 28px;
+      padding: 20px;
+      width: 200px;
+      transition: all 0.5s;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    .button span {
+      cursor: pointer;
+      display: inline-block;
+      position: relative;
+      transition: 0.5s;
+    }
+
+    .button span:after {
+      content: '\00bb';
+      position: absolute;
+      opacity: 0;
+      top: 0;
+      right: -20px;
+      transition: 0.5s;
+    }
+
+    .button:hover span {
+      padding-right: 25px;
+    }
+
+    .button:hover span:after {
+      opacity: 1;
+      right: 0;
+    }
+
+    .button2 {
+      background-color: white;
+      color: black;
+      border: 2px solid #008CBA;
+    }
+
+    .button2:hover {
+      background-color: #008CBA;
+      color: white;
+    }
+  </style>
+  <script>
+    function incrementValue(productId) {
+      var value = parseInt(document.getElementById('quantity-' + productId).value, 10);
+      value = isNaN(value) ? 0 : value;
+      value++;
+      document.getElementById('quantity-' + productId).value = value;
+      updatePrice(productId, value);
+    }
+
+    function decrementValue(productId) {
+      var value = parseInt(document.getElementById('quantity-' + productId).value, 10);
+      value = isNaN(value) ? 0 : value;
+      value < 1 ? value = 1 : '';
+      value--;
+      document.getElementById('quantity-' + productId).value = value;
+      updatePrice(productId, value);
+    }
+
+    function updatePrice(productId, quantity) {
+      var price = parseFloat(document.getElementById('price-' + productId).innerText.replace('VND', '').trim());
+      var totalElement = document.getElementById('total-' + productId);
+      totalElement.innerText = 'VND ' + (price * quantity).toLocaleString('en');
+      updateTotalAmount();
+    }
+
+    function updateTotalAmount() {
+      var totalAmount = 0;
+      var totals = document.querySelectorAll('[id^=total-]');
+      totals.forEach(function(total) {
+        totalAmount += parseFloat(total.innerText.replace('VND', '').trim().replace(/,/g, ''));
+      });
+      document.getElementById('total-amount').innerText = 'Tổng tiền VND ' + totalAmount.toLocaleString('en');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var quantityInputs = document.querySelectorAll('[id^=quantity-]');
+      quantityInputs.forEach(function(input) {
+        input.addEventListener('change', function() {
+          var productId = this.id.split('-')[1];
+          var quantity = parseInt(this.value, 10);
+          updatePrice(productId, quantity);
+        });
+      });
+      updateTotalAmount();
+    });
+  </script>
+</head>
+
+<br><br><br><br>
+
+<div class="container">
+  <div class="panel panel-success">
+    <div class="panel-heading">
+      <h6 style="text-align:center;" class="panel-title">Giỏ hàng</h6>
+    </div>
+    <table class="table table-hover table-bordered" id="dev-table">
+      <thead>
+        <tr>
+          <th>Tên sản phẩm</th>
+          <th>Ảnh</th>
+          <th>Giá</th>
+          <th>Thông tin</th>
+          <th>Số lượng</th>
+          <th>Tổng giá</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      {% for p in products %}
+        {% if p %}
+        <tr>
+          <td>{{p.name}}</td>
+          <td><img src="{% static p.product_image.url %}" alt="Profile Pic" height="50px" width="50px" /></td>
+          <td id="price-{{ p.id }}">VND {{p.price}}</td>
+          <td>{{p.description}}</td>
+          <td>
+            <div class="input-group">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-danger btn-number" onclick="decrementValue({{ p.id }})">
+                  <span class="glyphicon glyphicon-minus"></span>
+                </button>
+              </span>
+              <input type="text" id="quantity-{{ p.id }}" name="quantity" class="form-control input-number" value="1" min="1" max="100">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-success btn-number" onclick="incrementValue({{ p.id }})">
+                  <span class="glyphicon glyphicon-plus"></span>
+                </button>
+              </span>
+            </div>
+          </td>
+          <td id="total-{{ p.id }}">VND {{p.price}}</td>
+          <td>
+            <a class="btn btn-danger btn-xs" href="{% url 'remove-from-cart' p.id  %}?next_page={{request.path}}">
+              <span class="glyphicon glyphicon-trash"></span>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <br><br><br>
+        <h1>Không có sản phẩm</h1>
+        {% endif %}
+      {% endfor %}
+    </table>
+  </div>
+</div>
+<br><br><br>
+<div style="text-align: center;">
+  <a href="/customer-address"><button class="btn btn-success btn-lg"><span>Xác nhận </span></button></a>
+</div>
+
+<br><br><br><br><br>
+
+{% endblock content %}
